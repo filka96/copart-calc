@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Калькулятор авто</title>
+    <style>
+        :root {
+            --bg: #0b0f17;
+            --card: #121826;
+            --muted: #94a3b8;
+            --text: #e2e8f0;
+            --accent: #22d3ee;
+            --ok: #22c55e;
+            --warn: #f59e0b;
+            --err: #ef4444;
+            --border: #233047;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+            background: linear-gradient(180deg, #0b0f17, #0b1220 40%, #0b0f17);
+            color: var(--text);
+        }
+
+        .wrap {
+            max-width: 1100px;
+            margin: 32px auto;
+            padding: 0 16px;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin: 0 0 8px;
+            letter-spacing: 0.3px;
+        }
+
+        .sub {
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            gap: 16px;
+            align-items: start;
+        }
+
+        @media (max-width: 960px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
+        }
+
+        .card h2 {
+            font-size: 18px;
+            margin: 0 0 12px;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 10px;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .row label {
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        .row .hint {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: #0e1422;
+            color: var(--text);
+            outline: none;
+        }
+
+        input[type="number"]:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgb(34 211 238 / 0.2);
+        }
+
+        .rates {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .badge {
+            border: 1px dashed var(--border);
+            padding: 6px 10px;
+            border-radius: 999px;
+        }
+
+        .badge.ok {
+            border-color: #1e293b;
+            background: #0e1726;
+            color: var(--text);
+        }
+
+        .badge.warn {
+            border-color: var(--warn);
+            color: var(--warn);
+        }
+
+        .badge.err {
+            border-color: var(--err);
+            color: var(--err);
+        }
+
+        button.link {
+            background: transparent;
+            border: none;
+            color: var(--accent);
+            cursor: pointer;
+            padding: 0;
+            font: inherit;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        th {
+            text-align: left;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        td.num {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .sticky-head {
+            position: sticky;
+            top: 0;
+            background: linear-gradient(180deg, #0f1628, #121a2f);
+            z-index: 1;
+        }
+
+        .sticky-foot {
+            position: sticky;
+            bottom: 0;
+            background: linear-gradient(180deg, #0f1628, #121a2f);
+            z-index: 1;
+        }
+
+        .sum {
+            font-weight: 700;
+        }
+
+        .diff {
+            font-weight: 700;
+        }
+
+        .diff.positive {
+            color: var(--err);
+        }
+
+        .diff.negative {
+            color: var(--ok);
+        }
+
+        /* infographic */
+        .info-wrap {
+            margin-top: 12px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .bar-outer {
+            flex: 1;
+            height: 18px;
+            background: #0d1b2a;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .bar-inner {
+            height: 100%;
+            width: 0%;
+            transition: width 300ms ease;
+        }
+
+        .bar-inner.green {
+            background: linear-gradient(90deg, rgba(34, 197, 94, 0.12), rgba(34, 197, 94, 0.9));
+        }
+
+        .bar-inner.red {
+            background: linear-gradient(90deg, rgba(239, 68, 68, 0.12), rgba(239, 68, 68, 0.9));
+        }
+
+        .perc-label {
+            min-width: 150px;
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .foot {
+            margin-top: 14px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            margin-right: 6px;
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <h1>Калькулятор авто c аукциона copart</h1>
+    <div class="sub">Авто-расчёт (для 3-5 летних) во всех валютах (GEL / RUB / USD) с автоматическим обновлением курсов
+        и формул.
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h2>Ввод</h2>
+            <div class="row">
+                <label for="engineL">Объём двигателя, л</label>
+                <input id="engineL" type="number" min="0" step="0.1" value="2.0"/>
+            </div>
+
+            <div class="row">
+                <label for="localRF">Цена машины в РФ, ₽</label>
+                <input id="localRF" type="number" min="0" step="1000" value="5000000"/>
+            </div>
+
+            <div class="row">
+                <label for="auctionUSD">Цена машины на аукционе, $</label>
+                <input id="auctionUSD" type="number" min="0" step="100" value="25000"/>
+            </div>
+
+            <div class="row">
+                <label for="repairUSD">Примерная цена ремонта, $</label>
+                <input id="repairUSD" type="number" min="0" step="100" value="7000"/>
+            </div>
+
+            <div class="rates" id="ratesBox">
+                <span class="badge">Курсы загружаются…</span>
+            </div>
+        </div>
+
+        <div class="card" id="resultCard">
+            <h2>Результат</h2>
+            <div style="overflow:auto; max-height: 65vh;">
+                <table id="resultTable">
+                    <thead class="sticky-head">
+                    <tr>
+                        <th>Статья</th>
+                        <th class="col col-USD">USD</th>
+                        <th class="col col-GEL">GEL</th>
+                        <th class="col col-RUB">RUB</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tbody"></tbody>
+                    <tfoot class="sticky-foot">
+                    <tr class="sum">
+                        <td>ИТОГО</td>
+                        <td class="num" id="sumUSD">—</td>
+                        <td class="num" id="sumGEL">—</td>
+                        <td class="num" id="sumRUB">—</td>
+                    </tr>
+                    <tr class="sum">
+                        <td>Цена в РФ</td>
+                        <td class="num" id="localUSD">—</td>
+                        <td class="num" id="localGEL">—</td>
+                        <td class="num" id="localRUB">—</td>
+                    </tr>
+                    <tr id="rowDiff" class="diff">
+                        <td>Разница</td>
+                        <td class="num" id="diffUSD">—</td>
+                        <td class="num" id="diffGEL">—</td>
+                        <td class="num" id="diffRUB">—</td>
+                    </tr>
+                    <tr>
+                            <td class="info-wrap" id="infographic" aria-hidden="false">
+                            <div class="perc-label" id="percLabel">—</div>
+                        </td>
+                        <td class="num"> </td>
+                        <td class="num"> </td>
+                        <td class="num"> </td>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const $ = (id) => document.getElementById(id);
+
+    const state = {
+        rates: {USD: 1, GEL: 0, RUB: 0, EUR: 0},
+        fetchedAt: null,
+        usedFallback: false,
+        rateSource: null,
+    };
+
+    const currencyFormatter = (ccy, digits = 0) => new Intl.NumberFormat('ru-RU', {
+        style: 'currency',
+        currency: ccy,
+        maximumFractionDigits: digits
+    });
+    const fmt = (n, ccy) => {
+        if (n === null || n === undefined || isNaN(n)) return '-';
+        return currencyFormatter(ccy).format(n);
+    };
+
+    function usdTo(ccy, amountUSD) {
+        if (!amountUSD || isNaN(amountUSD)) return 0;
+        const rate = state.rates[ccy];
+        if (!rate || rate === 0) return 0;
+        return amountUSD * rate;
+    }
+
+    function rubToUSD(amountRUB) {
+        const r = state.rates['RUB'] || 1;
+        if (!r) return 0;
+        return (amountRUB || 0) / r;
+    }
+
+    function eurToUSD(amountEUR) {
+        const e = state.rates['EUR'] || 1;
+        if (!e) return 0;
+        return (amountEUR || 0) / e;
+    }
+
+    async function loadRates() {
+        const box = $('ratesBox');
+        box.innerHTML = `<span class="badge">Загружаем курсы...</span>`;
+
+        // Try primary provider: open.er-api.com (работающий провайдер)
+        try {
+            const res = await fetch('https://open.er-api.com/v6/latest/USD');
+            const data = await res.json();
+            if (data && data.rates && data.rates.GEL && data.rates.RUB && data.rates.EUR) {
+                state.rates = {USD: 1, GEL: data.rates.GEL, RUB: data.rates.RUB, EUR: data.rates.EUR};
+                if (data.time_last_update_unix) state.fetchedAt = new Date(data.time_last_update_unix * 1000);
+                else if (data.time_last_update_utc) state.fetchedAt = new Date(data.time_last_update_utc);
+                else state.fetchedAt = new Date();
+                state.usedFallback = false;
+                state.rateSource = 'open.er-api.com';
+                renderRates();
+                calc();
+                return;
+            }
+            throw new Error('open.er-api returned no rates');
+        } catch (errPrimary) {
+            // fallback to exchangerate.host
+            try {
+                const url = 'https://api.exchangerate.host/latest?base=USD&symbols=USD,GEL,RUB,EUR';
+                const res = await fetch(url);
+                const data = await res.json();
+                if (!data || !data.rates) throw new Error('exchangerate.host bad');
+                state.rates = {USD: 1, GEL: data.rates.GEL, RUB: data.rates.RUB, EUR: data.rates.EUR};
+                state.fetchedAt = data.date ? new Date(data.date) : new Date();
+                state.usedFallback = false;
+                state.rateSource = 'exchangerate.host';
+                renderRates();
+                calc();
+                return;
+            } catch (err2) {
+                // try yesterday on exchangerate.host
+                try {
+                    const y = new Date();
+                    y.setDate(y.getDate() - 1);
+                    const yStr = y.toISOString().split('T')[0];
+                    const urlY = `https://api.exchangerate.host/${yStr}?base=USD&symbols=USD,GEL,RUB,EUR`;
+                    const resY = await fetch(urlY);
+                    const dataY = await resY.json();
+                    if (!dataY || !dataY.rates) throw new Error('exchangerate.host yesterday bad');
+                    state.rates = {USD: 1, GEL: dataY.rates.GEL, RUB: dataY.rates.RUB, EUR: dataY.rates.EUR};
+                    state.fetchedAt = dataY.date ? new Date(dataY.date) : y;
+                    state.usedFallback = true;
+                    state.rateSource = 'exchangerate.host (yesterday)';
+                    renderRates();
+                    calc();
+                    return;
+                } catch (err3) {
+                    // final hardcoded fallback — but still display rates and mark as fallback
+                    state.rates = {USD: 1, GEL: 2.7, RUB: 90, EUR: 0.9};
+                    state.fetchedAt = null;
+                    state.usedFallback = true;
+                    state.rateSource = 'локальные резервные значения';
+                    renderRates();
+                    calc();
+                    return;
+                }
+            }
+        }
+    }
+
+    function renderRates() {
+        const box = $('ratesBox');
+        const t = state.fetchedAt ? new Intl.DateTimeFormat('ru-RU', {dateStyle: 'medium'}).format(new Date(state.fetchedAt)) : 'неизвестно';
+        const fallbackBadge = state.usedFallback ? `<span class="badge warn">Фоллбек</span>` : '';
+        const source = state.rateSource ? `<span class="badge">Источник: ${state.rateSource}</span>` : '';
+        box.innerHTML = `
+        <span class="badge ok">1 USD = ${(+state.rates.GEL).toFixed(4)} GEL</span>
+        <span class="badge ok">1 USD = ${(+state.rates.RUB).toFixed(4)} RUB</span>
+        <span class="badge ok">1 USD = ${(+state.rates.EUR).toFixed(4)} EUR</span>
+        <span class="badge">Дата: ${t}</span>
+        ${source}
+        ${fallbackBadge}
+        <button class="link" id="refreshBtn">Обновить</button>
+      `;
+        const btn = $('refreshBtn');
+        if (btn) btn.addEventListener('click', loadRates);
+    }
+
+    function auctionBrokerFee(auctionUSD) {
+        if (!auctionUSD || isNaN(auctionUSD)) return 0;
+        return auctionUSD <= 20000 ? 500 : 1000;
+    }
+
+    function auctionFee(auctionUSD) {
+        const c = +auctionUSD || 0;
+        const bracket = (c < 100) ? 0
+            : (c < 500) ? 29
+                : (c < 1000) ? 39
+                    : (c < 1500) ? 49
+                        : (c < 2000) ? 59
+                            : (c < 4000) ? 79
+                                : (c < 5000) ? 89
+                                    : (c < 6000) ? 119
+                                        : (c < 8000) ? 129
+                                            : 149;
+        return Math.max(c * 0.125, 27.5) + bracket + 95 + 15;
+    }
+
+    function customsEUR(engineL) {
+        const cc = Math.max(0, (+engineL || 0) * 1000);
+        let rate;
+        if (cc <= 1000) rate = 1.5;
+        else if (cc <= 1500) rate = 1.7;
+        else if (cc <= 1800) rate = 2.5;
+        else if (cc <= 2300) rate = 2.7;
+        else if (cc <= 3000) rate = 3.0;
+        else rate = 3.6;
+        const eur = cc * rate; // в евро
+        return Math.round(eur);
+    }
+
+    function buildRows() {
+        const engineL = parseFloat($('engineL').value) || 0;
+        const localRF_RUB = parseFloat($('localRF').value) || 0;
+        const auctionUSD = parseFloat($('auctionUSD').value) || 0;
+        const repairUSD = parseFloat($('repairUSD').value) || 0;
+
+        const rows = [];
+
+        const brokerUSD = auctionBrokerFee(auctionUSD);
+        const feeUSD = auctionFee(auctionUSD);
+
+        const customsEURval = customsEUR(engineL);
+        const customsUSD = eurToUSD(customsEURval);
+
+        const fix = {
+            shipToGE_USD: 1890,
+            reexport_USD: 300,
+            tbilisi_USD: 150,
+            docsRustavi_USD: 160,
+            brokerRF_RUB: 90000,
+            lab_RUB: 45000,
+            road_RUB: 30000,
+            util_RUB: 5200,
+        };
+
+        const pushUSD = (title, usd) => rows.push({title, USD: usd, GEL: usdTo('GEL', usd), RUB: usdTo('RUB', usd)});
+        const pushRUB = (title, rub) => {
+            const usd = rubToUSD(rub);
+            rows.push({title, USD: usd, GEL: usdTo('GEL', usd), RUB: rub});
+        };
+
+        pushUSD('Цена на аукционе', auctionUSD);
+        pushUSD('Примерная цена ремонта', repairUSD);
+        pushUSD('Услуги аукционного посредника', brokerUSD);
+        pushUSD('Аукционный сбор', feeUSD);
+        pushUSD('Доставка авто до Грузии', fix.shipToGE_USD);
+        pushUSD('Посредничество для реэкспорта', fix.reexport_USD);
+        pushUSD('Доставка авто до Тбилиси', fix.tbilisi_USD);
+        pushUSD('Документы в Рустави на реэкспорт', fix.docsRustavi_USD);
+        pushUSD('Таможенный сбор', customsUSD);
+
+        pushRUB('Таможенный брокер РФ', fix.brokerRF_RUB);
+        pushRUB('Лаборатория СБКТС + ЭПТС', fix.lab_RUB);
+        pushRUB('Дорога в РФ (платка+бенз+отели+стоянка)', fix.road_RUB);
+        pushRUB('Утилизационный сбор', fix.util_RUB);
+
+        const sumUSD = rows.reduce((acc, r) => acc + (r.USD || 0), 0);
+
+        const localRowUSD = rubToUSD(localRF_RUB);
+
+        return {rows, sumUSD, localRowUSD, localRF_RUB};
+    }
+
+    function calc() {
+        const tBody = $('tbody');
+        const {rows, sumUSD, localRowUSD, localRF_RUB} = buildRows();
+
+        tBody.innerHTML = rows.map(r => `
+        <tr>
+          <td>${r.title}</td>
+          <td class="num">${fmt(r.USD, 'USD')}</td>
+          <td class="num">${fmt(r.GEL, 'GEL')}</td>
+          <td class="num">${fmt(r.RUB, 'RUB')}</td>
+        </tr>
+      `).join('') + `
+      `;
+
+        // totals
+        $('sumUSD').textContent = fmt(sumUSD, 'USD');
+        $('sumGEL').textContent = fmt(usdTo('GEL', sumUSD), 'GEL');
+        $('sumRUB').textContent = fmt(usdTo('RUB', sumUSD), 'RUB');
+
+        $('localUSD').textContent = fmt(localRowUSD, 'USD');
+        $('localGEL').textContent = fmt(usdTo('GEL', localRowUSD), 'GEL');
+        $('localRUB').textContent = fmt(localRF_RUB, 'RUB');
+
+        const diffUSD = localRowUSD - sumUSD;
+        const diffGEL = usdTo('GEL', diffUSD);
+        const diffRUB = usdTo('RUB', diffUSD);
+
+        const diffRow = $('rowDiff');
+        diffRow.classList.remove('positive', 'negative');
+        if (diffUSD < 0) diffRow.classList.add('positive');
+        else if (diffUSD > 0) diffRow.classList.add('negative');
+
+        $('diffUSD').textContent = fmt(diffUSD, 'USD');
+        $('diffGEL').textContent = fmt(diffGEL, 'GEL');
+        $('diffRUB').textContent = fmt(diffRUB, 'RUB');
+
+        const percEl = $('percLabel');
+        if (!localRowUSD || isNaN(localRowUSD) || localRowUSD === 0) {
+            percEl.textContent = 'Невозможно вычислить % — локальная цена = 0';
+        } else {
+            const percent = (diffUSD / localRowUSD) * 100; // положительное = аукцион дешевле
+            if (percent < 0) {
+                percEl.textContent = `Аукцион дороже на ${percent.toFixed(1)}%`;
+            } else if (percent > 0) {
+                percEl.textContent = `Аукцион дешевле на ${Math.abs(percent).toFixed(1)}%`;
+            } else {
+                percEl.textContent = 'Цена примерно равна локальной';
+            }
+        }
+    }
+
+    ['engineL', 'localRF', 'auctionUSD', 'repairUSD'].forEach(id => {
+        $(id).addEventListener('input', calc);
+        $(id).addEventListener('change', calc);
+    });
+
+    loadRates();
+
+</script>
+</body>
+</html>
